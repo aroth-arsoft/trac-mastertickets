@@ -1,19 +1,23 @@
 # -*- coding: utf-8 -*-
-# Created by Noah Kantrowitz on 2007-12-21.
-# Copyright (c) 2007 Noah Kantrowitz. All rights reserved.
-import os
+#
+# Copyright (c) 2007-2012 Noah Kantrowitz <noah@coderanger.net>
+# All rights reserved.
+#
+# This software is licensed as described in the file COPYING, which
+# you should have received as part of this distribution.
+#
+
 import subprocess
-import tempfile
-import time
 import itertools
 
-try:
-    set = set
-except NameError:
-    from sets import Set as set
+from trac.util.compat import set
+from trac.util.text import to_unicode
+from trac.util.translation import _
+
 
 def _format_options(base_string, options):
-    return u'%s [%s]'%(base_string, u', '.join([u'%s="%s"'%x for x in options.iteritems()]))
+    return u'%s [%s]' % (base_string, u', '.join([u'%s="%s"' % x for x in options.iteritems()]))
+
 
 class Edge(dict):
     """Model for an edge in a dot graph."""
@@ -24,7 +28,7 @@ class Edge(dict):
         dict.__init__(self, **kwargs)
 
     def __str__(self):
-        ret = u'%s -> %s'%(self.source.name, self.dest.name)
+        ret = u'%s -> %s' % (self.source.name, self.dest.name)
         if self:
             ret = _format_options(ret, self)
         return ret
@@ -67,12 +71,13 @@ class Node(dict):
 class Graph(object):
     """A model object for a graphviz digraph."""
 
-    def __init__(self, name=u'graph'):
-        super(Graph,self).__init__()
+    def __init__(self, name=u'graph', log=None):
+        super(Graph, self).__init__()
         self.name = name
+        self.log = log
         self.nodes = []
         self._node_map = {}
-        self.attributes={}
+        self.attributes = {}
         self.edges = []
 
     def add(self, obj):
@@ -98,14 +103,15 @@ class Graph(object):
     def __str__(self):
         edges = []
         nodes = []
-        
+
         memo = set()
+
         def process(lst):
             for obj in lst:
                 if obj in memo:
                     continue
                 memo.add(obj)
-                
+
                 if isinstance(obj, Node):
                     nodes.append(obj)
                     process(obj.edges)
@@ -115,22 +121,28 @@ class Graph(object):
                         process((obj.source,))
                     if isinstance(obj.dest, Node):
                         process((obj.dest,))
-        
+
         process(self.nodes)
         process(self.edges)
-        
-        lines = [u'digraph "%s" {'%self.name]
-        for att,value in self.attributes.iteritems():
-            lines.append(u'\t%s="%s";' % (att,value))
+
+        lines = [u'digraph "%s" {' % self.name]
+        for att, value in self.attributes.iteritems():
+            lines.append(u'\t%s="%s";' % (att, value))
         for obj in itertools.chain(nodes, edges):
-            lines.append(u'\t%s;'%obj)
+            lines.append(u'\t%s;' % obj)
         lines.append(u'}')
         return u'\n'.join(lines)
 
     def render(self, dot_path='dot', format='png'):
         """Render a dot graph."""
-        proc = subprocess.Popen([dot_path, '-T%s'%format], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        out, _ = proc.communicate(unicode(self).encode('utf8'))
+        cmd = [dot_path, '-T%s' % format]
+        p = subprocess.Popen(cmd, stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        out, error = p.communicate(to_unicode(self).encode('utf8'))
+        if error or p.returncode and self.log:
+            self.log.error(_("dot %(dot_path)s failed with code %(rc)s: %(error)s",
+                             dot_path=dot_path, rc=p.returncode, error=error))
         return out
 
 
@@ -139,7 +151,7 @@ if __name__ == '__main__':
     root = Node('me')
     root > Node('them')
     root < Node(u'Üs')
-    
+
     g.add(root)
-    
+
     print g.render()

@@ -1,0 +1,5 @@
+/trac-mastertickets/
+*.debhelper
+*.substvars
+*.log
+/files
