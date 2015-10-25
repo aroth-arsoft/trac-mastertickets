@@ -1,3 +1,9 @@
+trac-mastertickets (4.0.0-0.1~aroth~ppa1) wily; urgency=medium
+
+  * update to development version 4.0.0
+
+ -- Andreas Roth <aroth@arsoft-online.com>  Sun, 25 Oct 2015 15:57:24 +0100
+
 trac-mastertickets (3.0.4-0.1~aroth~ppa1) wily; urgency=medium
 
   * update to version 3.0.4

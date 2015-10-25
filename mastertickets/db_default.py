@@ -29,3 +29,4 @@ def convert_to_int(data):
 migrations = [
     (xrange(1, 2), convert_to_int),
 ]
+

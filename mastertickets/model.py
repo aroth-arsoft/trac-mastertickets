@@ -11,7 +11,7 @@ import copy
 from datetime import datetime
 
 from trac.ticket.model import Ticket
-from trac.util.compat import set, sorted
+from trac.util.compat import any, set, sorted
 from trac.util.datefmt import utc, to_utimestamp
 
 
@@ -70,16 +70,38 @@ class TicketLinks(object):
                     update_field = lambda lst: lst.remove(str(self.tkt.id))
 
                 if update_field is not None:
-                    cursor.execute('SELECT value FROM ticket_custom WHERE ticket=%s AND name=%s',
-                                   (n, str(field)))
-                    old_value = (cursor.fetchone() or ('',))[0]
-                    new_value = [x.strip() for x in old_value.split(',') if x.strip()]
+                    old_value = None
+                    for old_value, in self.env.db_query("""
+                            SELECT value FROM ticket_custom
+                            WHERE ticket=%s AND name=%s
+                            """, (n, field)):
+                        break
+                    if old_value:
+                        new_value = [x.strip() for x in old_value.split(',') if x.strip()]
+                    else:
+                        new_value = []
                     update_field(new_value)
                     new_value = ', '.join(sorted(new_value, key=lambda x: int(x)))
 
-                    cursor.execute(
-                        'INSERT INTO ticket_change (ticket, time, author, field, oldvalue, newvalue) VALUES (%s, %s, %s, %s, %s, %s)',
-                        (n, when_ts, author, field, old_value, new_value))
+                    # ticket, time and field must be unique for database integrity
+                    # The TicketImportPlugin assigns the same changetime to all ticket
+                    # if not specified, which was causing an IntegrityError (#10194).
+                    changelog = Ticket(self.env, n).get_changelog(when=when)
+                    if any(field in cl for cl in changelog):
+                        cursor.execute("""
+                            UPDATE ticket_change SET author=%s,
+                              oldvalue=%s, newvalue=%s
+                            WHERE ticket=%s AND time=%s AND field=%s
+                            """, (author, old_value, new_value, n,
+                                  when_ts, field)
+                        )
+                    else:
+                        cursor.execute("""
+                            INSERT INTO ticket_change (ticket, time, author,
+                              field, oldvalue, newvalue)
+                            VALUES (%s, %s, %s, %s, %s, %s)""",
+                                (n, when_ts, author, field, old_value, new_value)
+                        )
 
                     # Add comment to referenced ticket if a comment hasn't already been added
                     if comment and not any('comment' in entry for entry in self.tkt.get_changelog(when)):
@@ -90,12 +112,12 @@ class TicketLinks(object):
                     cursor.execute('UPDATE ticket_custom SET value=%s WHERE ticket=%s AND name=%s',
                                    (new_value, n, field))
 
-                    # refresh the changetime to prevent concurrent edits
-                    cursor.execute('UPDATE ticket SET changetime=%s WHERE id=%s', (when_ts, n))
-
                     if not cursor.rowcount:
                         cursor.execute('INSERT INTO ticket_custom (ticket, name, value) VALUES (%s, %s, %s)',
                                        (n, field, new_value))
+
+                    # refresh the changetime to prevent concurrent edits
+                    cursor.execute('UPDATE ticket SET changetime=%s WHERE id=%s', (when_ts, n))
 
         # cursor.execute('DELETE FROM mastertickets WHERE source=%s OR dest=%s', (self.tkt.id, self.tkt.id))
         # data = []
@@ -107,7 +129,7 @@ class TicketLinks(object):
         #     if isisntance(tkt, Ticket):
         #         tkt = tkt.id
         #     data.append((tkt, self.tkt.id))
-        # 
+        #
         # cursor.executemany('INSERT INTO mastertickets (source, dest) VALUES (%s, %s)', data)
 
         if handle_commit:
