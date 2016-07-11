@@ -1,3 +1,10 @@
+trac-mastertickets (4.0.0-0.3~aroth~ppa1) xenial; urgency=medium
+
+  * switch to pybuild
+  * add missing SOURCES.txt
+
+ -- Andreas Roth <aroth@arsoft-online.com>  Mon, 11 Jul 2016 07:23:50 +0200
+
 trac-mastertickets (4.0.0-0.2~aroth~ppa1) wily; urgency=medium
 
   * fix egg-info
