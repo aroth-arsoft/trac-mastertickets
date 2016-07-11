@@ -1,3 +1,9 @@
+trac-mastertickets (4.0.0-0.3~aroth~ppa2) xenial; urgency=medium
+
+  * disable tests
+
+ -- Andreas Roth <aroth@arsoft-online.com>  Mon, 11 Jul 2016 08:09:13 +0200
+
 trac-mastertickets (4.0.0-0.3~aroth~ppa1) xenial; urgency=medium
 
   * switch to pybuild
