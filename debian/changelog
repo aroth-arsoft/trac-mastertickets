@@ -1,3 +1,10 @@
+trac-mastertickets (4.0.0+svn16171-0.1~aroth1) yakkety; urgency=medium
+
+  * update to latest version
+  * fixes incompatibly with trac 1.2
+
+ -- Andreas Roth <aroth@arsoft-online.com>  Mon, 02 Jan 2017 12:13:57 +0100
+
 trac-mastertickets (4.0.0-0.3~aroth~ppa2) xenial; urgency=medium
 
   * disable tests
