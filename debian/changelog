@@ -1,3 +1,9 @@
+trac-mastertickets (4.0.0+svn16171-0.1~aroth2) yakkety; urgency=medium
+
+  * only need graphviz, no graphviz trac plugin anymore
+
+ -- Andreas Roth <aroth@arsoft-online.com>  Mon, 02 Jan 2017 14:51:58 +0100
+
 trac-mastertickets (4.0.0+svn16171-0.1~aroth1) yakkety; urgency=medium
 
   * update to latest version
