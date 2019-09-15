@@ -1,3 +1,11 @@
+trac-mastertickets (4.0.2+svn17497-1) disco; urgency=medium
+
+  * Automatic update 4.0.2 from https://trac-
+    hacks.org/browser/masterticketsplugin/trunk/?format=zip&rev=17497
+    revision 17497
+
+ -- Andreas Roth <aroth@arsoft-online.com>  Sun, 15 Sep 2019 18:35:27 +0200
+
 trac-mastertickets (4.0.0+svn16171-0.1~aroth2) yakkety; urgency=medium
 
   * only need graphviz, no graphviz trac plugin anymore
